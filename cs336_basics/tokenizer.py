@@ -123,7 +123,7 @@ class Tokenizer:
         text = b""
         for id in ids:
             text += self.vocab[id]
-        return text.decode("utf-8")
+        return text.decode("utf-8", errors="replace")
 
     def _pretokenize(self, text: str) -> list[bytes]:
         pretokens  = []
