@@ -29,7 +29,21 @@ def run_linear(
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
 
-    raise NotImplementedError
+    from cs336_basics import linear
+
+    linear_model = linear.Linear(
+        d_in,
+        d_out,
+        device=weights.device,
+        dtype=weights.dtype,
+    )
+
+    # The adapter supplies the reference weights, so copy them into the
+    # model instead of using the model's random initialization.
+    with torch.no_grad():
+        linear_model.weight.copy_(weights)
+
+    return linear_model(in_features)
 
 
 def run_embedding(
