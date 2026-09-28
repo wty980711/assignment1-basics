@@ -9,6 +9,9 @@ import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
+from cs336_basics import embedding, linear, rmsnorm, swiglu, rope
+from cs336_basics.tokenizer import Tokenizer
+from cs336_basics.train_bpe import train_bpe
 
 def run_linear(
     d_in: int,
@@ -28,8 +31,6 @@ def run_linear(
     Returns:
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
-
-    from cs336_basics import linear
 
     linear_model = linear.Linear(
         d_in,
@@ -64,8 +65,6 @@ def run_embedding(
     Returns:
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
-
-    from cs336_basics import embedding
 
     embedding_model = embedding.Embedding(
         vocab_size,
@@ -109,8 +108,6 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    from cs336_basics import swiglu
-
     swiglu_model = swiglu.SwiGLU(d_model, d_ff, w1_weight.device, w1_weight.dtype)
     swiglu_model.load_state_dict({
       "w1": w1_weight,
@@ -236,7 +233,9 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    rope_model = rope.RotaryPositionalEmbedding(theta, d_k, max_seq_len, in_query_or_key.device)
+
+    return rope_model(in_query_or_key, token_positions)
 
 
 def run_transformer_block(
@@ -414,8 +413,6 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    from cs336_basics import rmsnorm
-
     rmsnorm_model = rmsnorm.RMSNorm(d_model, eps, weights.device, weights.dtype)
 
     with torch.no_grad():
@@ -602,8 +599,6 @@ def get_tokenizer(
     Returns:
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-    from cs336_basics.tokenizer import Tokenizer
-
     return Tokenizer(vocab=vocab, merges=merges, special_tokens=special_tokens)
 
 
@@ -634,6 +629,4 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    from cs336_basics.train_bpe import train_bpe
-
     return train_bpe(input_path, vocab_size, special_tokens)
